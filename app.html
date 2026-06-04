@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DPR Manager — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --sidebar:     #0a0e1a;
+  --sidebar2:    #0f1528;
+  --sidetext:    rgba(255,255,255,.75);
+  --sidemuted:   rgba(255,255,255,.32);
+  --accent:      #00d4ff;
+  --accent2:     #0099cc;
+  --accentglow:  rgba(0,212,255,.2);
+  --gold:        #f0c040;
+  --paper:       #f0f4f8;
+  --surface:     #ffffff;
+  --ink:         #0a0e1a;
+  --muted:       #64748b;
+  --rule:        #e2e8f0;
+  --success:     #10b981;
+  --danger:      #ef4444;
+  --warn:        #f59e0b;
+  --radius:      10px;
+  --shadow:      0 4px 24px rgba(0,0,0,.08);
+}
+
+html,body{height:100%;overflow:hidden;font-family:'Outfit',sans-serif;}
+body{display:flex;background:var(--paper);}
+
+/* ══════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════ */
+.sidebar{
+  width:260px;flex-shrink:0;
+  background:var(--sidebar);
+  display:flex;flex-direction:column;
+  height:100vh;
+  position:relative;overflow:hidden;
+  border-right:1px solid rgba(0,212,255,.08);
+}
+.sidebar::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+}
+/* grid lines */
+.sidebar::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+
+.sidebar-brand{
+  padding:28px 24px 24px;
+  display:flex;align-items:center;gap:12px;
+  position:relative;z-index:1;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.brand-icon{
+  width:40px;height:40px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;
+  box-shadow:0 0 20px var(--accentglow);
+  flex-shrink:0;
+}
+.brand-text .name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:16px;letter-spacing:.08em;color:#fff;line-height:1;
+}
+.brand-text .sub{
+  font-family:'DM Mono',monospace;
+  font-size:.58rem;letter-spacing:.15em;
+  color:var(--accent);text-transform:uppercase;margin-top:2px;
+}
+
+/* Nav */
+.sidebar-nav{
+  flex:1;padding:20px 16px;
+  display:flex;flex-direction:column;gap:2px;
+  overflow-y:auto;position:relative;z-index:1;
+}
+.nav-section-label{
+  font-family:'DM Mono',monospace;
+  font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--sidemuted);
+  padding:12px 8px 6px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  border-radius:8px;
+  font-size:.88rem;font-weight:500;
+  color:var(--sidemuted);
+  cursor:pointer;
+  transition:all .18s;
+  text-decoration:none;
+  user-select:none;
+}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--sidetext);}
+.nav-item.active{
+  background:rgba(0,212,255,.1);
+  color:var(--accent);
+  border-left:2px solid var(--accent);
+  padding-left:10px;
+}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.7;}
+.nav-item.active svg{opacity:1;}
+
+/* Project list in sidebar */
+.proj-list{display:flex;flex-direction:column;gap:1px;margin-top:4px;}
+.proj-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:7px;
+  font-size:.82rem;color:var(--sidemuted);
+  cursor:pointer;transition:all .18s;
+}
+.proj-item:hover{background:rgba(255,255,255,.05);color:var(--sidetext);}
+.proj-item.active{background:rgba(0,212,255,.08);color:rgba(255,255,255,.8);}
+.proj-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);flex-shrink:0;opacity:.5;
+}
+.proj-item.active .proj-dot{opacity:1;box-shadow:0 0 6px var(--accent);}
+.proj-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.proj-role{
+  font-family:'DM Mono',monospace;font-size:.58rem;
+  padding:1px 5px;border-radius:3px;flex-shrink:0;
+}
+.proj-role.mc{background:rgba(0,212,255,.15);color:var(--accent);}
+.proj-role.sc{background:rgba(107,63,173,.2);color:#c084fc;}
+
+.new-proj-btn{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:7px;
+  font-size:.82rem;color:var(--accent);
+  cursor:pointer;transition:all .18s;
+  margin-top:6px;
+  border:1px dashed rgba(0,212,255,.25);
+}
+.new-proj-btn:hover{background:rgba(0,212,255,.06);border-color:var(--accent);}
+
+/* Sidebar bottom */
+.sidebar-bottom{
+  padding:16px;
+  border-top:1px solid rgba(255,255,255,.06);
+  position:relative;z-index:1;
+}
+.user-chip{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  background:rgba(255,255,255,.05);
+  border-radius:9px;
+  cursor:pointer;
+  transition:background .2s;
+}
+.user-chip:hover{background:rgba(255,255,255,.09);}
+.user-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:.82rem;color:#fff;flex-shrink:0;
+}
+.user-info{flex:1;min-width:0;}
+.user-name{font-size:.82rem;font-weight:600;color:var(--sidetext);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.user-role{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--sidemuted);}
+.sign-out-btn{color:var(--sidemuted);line-height:0;transition:color .2s;}
+.sign-out-btn:hover{color:var(--danger);}
+
+/* ══════════════════════════════════════
+   MAIN CONTENT
+══════════════════════════════════════ */
+.main{
+  flex:1;display:flex;flex-direction:column;
+  height:100vh;overflow:hidden;
+  min-width:0;
+}
+
+.topbar{
+  height:64px;flex-shrink:0;
+  background:var(--surface);
+  border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;gap:16px;
+  padding:0 28px;
+}
+.topbar-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.6rem;letter-spacing:.05em;color:var(--ink);
+  flex:1;
+}
+.topbar-actions{display:flex;align-items:center;gap:8px;}
+
+.content{
+  flex:1;overflow-y:auto;
+  padding:28px;
+}
+
+/* ══════════════════════════════════════
+   STAT CARDS
+══════════════════════════════════════ */
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:16px;
+  margin-bottom:28px;
+}
+.stat-card{
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:var(--radius);
+  padding:20px;
+  position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+  background:var(--accent2);
+}
+.stat-card.warn::before{background:var(--warn);}
+.stat-card.success::before{background:var(--success);}
+.stat-card.danger::before{background:var(--danger);}
+.stat-val{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.4rem;color:var(--ink);line-height:1;
+  margin-bottom:4px;
+}
+.stat-key{
+  font-family:'DM Mono',monospace;
+  font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);
+}
+.stat-icon{
+  position:absolute;top:16px;right:16px;
+  width:36px;height:36px;border-radius:8px;
+  background:var(--paper);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);
+}
+
+/* ══════════════════════════════════════
+   PROJECT CARDS
+══════════════════════════════════════ */
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.section-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.3rem;letter-spacing:.06em;color:var(--ink);
+}
+.projects-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px;
+  margin-bottom:32px;
+}
+.project-card{
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:var(--radius);
+  padding:20px;
+  cursor:pointer;
+  transition:all .2s;
+  position:relative;overflow:hidden;
+}
+.project-card::after{
+  content:'';
+  position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent2),var(--accent));
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .3s;
+}
+.project-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.1);border-color:#c8d6e8;}
+.project-card:hover::after{transform:scaleX(1);}
+.project-card.new-card{
+  border:1.5px dashed var(--rule);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:160px;gap:10px;
+  color:var(--muted);
+}
+.project-card.new-card:hover{border-color:var(--accent2);color:var(--accent2);}
+.project-card.new-card::after{display:none;}
+.pc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.pc-name{font-weight:700;font-size:1rem;color:var(--ink);line-height:1.3;}
+.pc-badge{
+  font-family:'DM Mono',monospace;font-size:.6rem;
+  padding:2px 7px;border-radius:3px;font-weight:600;letter-spacing:.06em;
+  flex-shrink:0;margin-left:8px;margin-top:2px;
+}
+.pc-badge.mc{background:#eef3f7;color:#1a4f6e;}
+.pc-badge.sc{background:#f0e8ff;color:#6b3fad;}
+.pc-meta{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);margin-bottom:12px;}
+.pc-stats{display:flex;gap:16px;}
+.pc-stat{text-align:center;}
+.pc-stat-val{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--ink);}
+.pc-stat-key{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+.pc-progress{
+  height:3px;background:var(--rule);border-radius:2px;
+  margin-top:14px;overflow:hidden;
+}
+.pc-progress-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--accent2),var(--accent));
+  transition:width .5s;
+}
+.pc-actions{
+  position:absolute;top:12px;right:12px;
+  display:flex;gap:4px;opacity:0;transition:opacity .2s;
+}
+.project-card:hover .pc-actions{opacity:1;}
+.pc-action-btn{
+  width:28px;height:28px;border-radius:6px;
+  background:var(--paper);border:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--muted);
+  transition:all .15s;font-size:.8rem;
+}
+.pc-action-btn:hover{background:var(--ink);color:#fff;border-color:var(--ink);}
+.pc-action-btn.danger:hover{background:var(--danger);border-color:var(--danger);}
+
+/* ══════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════ */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 18px;border-radius:8px;
+  font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;
+  cursor:pointer;border:none;transition:all .2s;
+  text-decoration:none;
+}
+.btn-primary{
+  background:linear-gradient(135deg,#0a0e1a,#1a2540);
+  color:#fff;
+}
+.btn-primary:hover{box-shadow:0 4px 14px rgba(10,14,26,.3);transform:translateY(-1px);}
+.btn-ghost{
+  background:transparent;color:var(--muted);
+  border:1px solid var(--rule);
+}
+.btn-ghost:hover{background:var(--paper);color:var(--ink);}
+.btn-accent{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;}
+.btn-accent:hover{box-shadow:0 4px 14px var(--accentglow);}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-sm{padding:6px 12px;font-size:.8rem;}
+
+/* ══════════════════════════════════════
+   MODALS
+══════════════════════════════════════ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(10,14,26,.6);
+  backdrop-filter:blur(6px);
+  z-index:1000;
+  align-items:center;justify-content:center;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--surface);
+  border-radius:14px;
+  width:min(520px,94vw);
+  box-shadow:0 32px 80px rgba(0,0,0,.25), 0 0 0 1px var(--rule);
+  animation:modalIn .22s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:scale(.96)translateY(8px)}}
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 26px 18px;
+  border-bottom:1px solid var(--rule);
+}
+.modal-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.4rem;letter-spacing:.05em;color:var(--ink);
+}
+.modal-close{
+  width:30px;height:30px;border-radius:6px;
+  background:var(--paper);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:1.1rem;transition:all .15s;
+}
+.modal-close:hover{background:var(--danger);color:#fff;}
+.modal-body{padding:26px;}
+.modal-footer{
+  padding:16px 26px;
+  border-top:1px solid var(--rule);
+  display:flex;justify-content:flex-end;gap:8px;
+}
+
+/* ══════════════════════════════════════
+   FORM ELEMENTS
+══════════════════════════════════════ */
+.field{margin-bottom:16px;}
+.label{
+  display:block;
+  font-family:'DM Mono',monospace;
+  font-size:.67rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:6px;
+}
+.input,.select,.textarea{
+  width:100%;
+  border:1.5px solid var(--rule);
+  border-radius:8px;
+  padding:10px 14px;
+  font-family:'Outfit',sans-serif;font-size:.9rem;color:var(--ink);
+  background:#fff;
+  transition:border-color .2s,box-shadow .2s;
+  outline:none;
+}
+.input:focus,.select:focus,.textarea:focus{
+  border-color:var(--accent2);
+  box-shadow:0 0 0 3px rgba(0,153,204,.1);
+}
+.textarea{resize:vertical;min-height:80px;line-height:1.5;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+.toast{
+  position:fixed;bottom:28px;right:28px;
+  background:var(--ink);color:#fff;
+  padding:12px 20px;border-radius:9px;
+  font-size:.88rem;font-weight:500;
+  z-index:9999;
+  display:none;align-items:center;gap:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+  border-left:3px solid var(--accent);
+}
+.toast.show{display:flex;animation:toastIn .3s ease;}
+.toast.err{border-left-color:var(--danger);}
+.toast.ok{border-left-color:var(--success);}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}}
+
+/* ══════════════════════════════════════
+   DRIVE STATUS
+══════════════════════════════════════ */
+.drive-status{
+  display:flex;align-items:center;gap:6px;
+  font-family:'DM Mono',monospace;font-size:.72rem;
+  padding:6px 12px;border-radius:6px;
+  background:var(--paper);border:1px solid var(--rule);
+  color:var(--muted);
+}
+.drive-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--warn);flex-shrink:0;
+}
+.drive-dot.ok{background:var(--success);box-shadow:0 0 6px var(--success);}
+.drive-dot.err{background:var(--danger);}
+
+/* ══════════════════════════════════════
+   LOADING
+══════════════════════════════════════ */
+.page-loader{
+  position:fixed;inset:0;
+  background:var(--sidebar);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;z-index:9999;
+  transition:opacity .4s;
+}
+.page-loader.fade{opacity:0;pointer-events:none;}
+.loader-brand{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2rem;letter-spacing:.15em;color:#fff;
+}
+.loader-bar{
+  width:200px;height:2px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;
+}
+.loader-fill{
+  height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));
+  border-radius:2px;
+  animation:load 1.4s ease-in-out infinite;
+}
+@keyframes load{0%{width:0;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0;margin-left:100%}}
+.loader-sub{
+  font-family:'DM Mono',monospace;
+  font-size:.7rem;letter-spacing:.12em;color:rgba(255,255,255,.3);
+}
+</style>
+</head>
+<body>
+
+<!-- Page loader -->
+<div class="page-loader" id="pageLoader">
+  <div class="loader-brand">DPR MANAGER</div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+  <div class="loader-sub" id="loaderMsg">Checking session…</div>
+</div>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">DPR</div>
+    <div class="brand-text">
+      <div class="name">DPR Manager</div>
+      <div class="sub">Field Intelligence</div>
+    </div>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Workspace</div>
+    <div class="nav-item active" onclick="showView('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      All Projects
+    </div>
+    <div class="nav-item" onclick="showView('recent')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Recent Activity
+    </div>
+
+    <div class="nav-section-label" style="margin-top:8px">Projects</div>
+    <div class="proj-list" id="sidebarProjects">
+      <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--sidemuted);padding:6px 12px">No projects yet</div>
+    </div>
+    <div class="new-proj-btn" onclick="openNewProjectModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Project
+    </div>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="user-chip" onclick="toggleUserMenu()">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">Loading…</div>
+        <div class="user-role">Owner · QS Pro</div>
+      </div>
+      <div class="sign-out-btn" onclick="event.stopPropagation();doSignOut()" title="Sign out">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Main content -->
+<div class="main">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Projects Dashboard</div>
+    <div class="topbar-actions">
+      <div class="drive-status" id="driveStatus" onclick="handleDriveBtn()" style="cursor:pointer" title="Click to connect Google Sheets">
+        <div class="drive-dot" id="driveDot"></div>
+        <span id="driveStatusText">Google Sheets</span>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openNewProjectModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Project
+      </button>
+    </div>
+  </div>
+
+  <!-- Content area -->
+  <div class="content" id="contentArea">
+    <!-- Stats -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-val" id="statProjects">—</div>
+        <div class="stat-key">Total Projects</div>
+        <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-val" id="statDPRs">—</div>
+        <div class="stat-key">Total DPRs</div>
+        <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      </div>
+      <div class="stat-card warn">
+        <div class="stat-val" id="statDelays">—</div>
+        <div class="stat-key">Delay Events</div>
+        <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-val" id="statIssues">—</div>
+        <div class="stat-key">Open Issues</div>
+        <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      </div>
+    </div>
+
+    <!-- Projects -->
+    <div class="section-header">
+      <div class="section-title">Your Projects</div>
+
+    </div>
+
+    <div class="projects-grid" id="projectsGrid">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- New Project Modal -->
+<div class="modal-overlay" id="newProjectModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">New Project</div>
+      <button class="modal-close" onclick="closeNewProjectModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-2">
+        <div class="field" style="grid-column:1/-1">
+          <label class="label">Project Name *</label>
+          <input class="input" id="newProjName" placeholder="e.g. Al Raha Beach Towers — Tower A">
+        </div>
+        <div class="field">
+          <label class="label">Contract No.</label>
+          <input class="input" id="newProjContract" placeholder="CON-2024-001">
+        </div>
+        <div class="field">
+          <label class="label">Our Role</label>
+          <select class="select" id="newProjRole">
+            <option value="sc">Sub-Contractor</option>
+            <option value="mc">Main Contractor</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label">Main Contractor / Our Company</label>
+          <input class="input" id="newProjMC" placeholder="Company name">
+        </div>
+        <div class="field">
+          <label class="label">Sub-Contractor</label>
+          <input class="input" id="newProjSC" placeholder="Company name">
+        </div>
+        <div class="field">
+          <label class="label">Start Date</label>
+          <input class="input" type="date" id="newProjStart">
+        </div>
+        <div class="field">
+          <label class="label">End Date</label>
+          <input class="input" type="date" id="newProjEnd">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeNewProjectModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="createProject()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Create Project
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────
+const CONFIG = {
+  OWNER_EMAIL: 'dulajith@gmail.com',
+  LOGIN_URL:   './index.html',
+  DPR_URL:     './dpr.html',
+  // ── Paste your Apps Script Web App URL below after deploying Code.gs ──
+  SCRIPT_URL:  'https://script.google.com/macros/s/AKfycbz7k9Q0dAx4_DzdS3SF3V0GUqr3DtRa5wooiuNaJ9TmfOSIPA6J2-2VXEb3WmpKWmE9TQ/exec',
+  SECRET_KEY:  'DPR2026NIPUNA',
+};
+
+// ── SESSION CHECK ───────────────────────────────────────────────
+let currentUser = null;
+
+function checkSession(){
+  const raw = localStorage.getItem('dpr_session') || sessionStorage.getItem('dpr_session');
+  if(!raw){ window.location.href = CONFIG.LOGIN_URL; return false; }
+  try{
+    const s = JSON.parse(raw);
+    if(s.expires < Date.now()){ doSignOut(); return false; }
+    currentUser = s;
+    driveToken = s.token !== 'local' ? s.token : null;
+    return true;
+  }catch(e){ doSignOut(); return false; }
+}
+
+function doSignOut(){
+  localStorage.removeItem('dpr_session');
+  sessionStorage.removeItem('dpr_session');
+  window.location.href = CONFIG.LOGIN_URL;
+}
+
+// ── STORAGE — localStorage with Drive sync ──────────────────────
+function loadProjects(){
+  try{ return JSON.parse(localStorage.getItem('dpr_projects')||'[]'); }
+  catch(e){ return []; }
+}
+function saveProjects(arr){
+  localStorage.setItem('dpr_projects', JSON.stringify(arr));
+  // async sync to Google Sheets
+  syncToServer(arr).catch(()=>{});
+}
+function getProject(id){ return loadProjects().find(p=>p.id===id)||null; }
+function updateProject(proj){
+  const all = loadProjects();
+  const idx = all.findIndex(p=>p.id===proj.id);
+  if(idx>=0) all[idx]=proj; else all.push(proj);
+  saveProjects(all);
+}
+function genId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+// ── APPS SCRIPT API ─────────────────────────────────────────────
+async function apiCall(action, params={}) {
+  if(!CONFIG.SCRIPT_URL || CONFIG.SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbz7k9Q0dAx4_DzdS3SF3V0GUqr3DtRa5wooiuNaJ9TmfOSIPA6J2-2VXEb3WmpKWmE9TQ/exec'){
+    // Not configured yet — use localStorage only
+    return null;
+  }
+  try{
+    const res = await fetch(CONFIG.SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: CONFIG.SECRET_KEY, action, ...params }),
+    });
+    return await res.json();
+  }catch(e){
+    console.warn('API call failed:', e);
+    setDriveStatus('err', 'Drive: offline');
+    return null;
+  }
+}
+
+function setDriveStatus(state, msg){
+  const dot = document.getElementById('driveDot');
+  const txt = document.getElementById('driveStatusText');
+  dot.className = 'drive-dot ' + (state==='ok'?'ok':state==='err'?'err':'');
+  txt.textContent = msg || 'Google Sheets';
+  if(typeof updateDriveChip === 'function') updateDriveChip();
+}
+
+function handleDriveBtn(){ syncFromServer(); }
+function updateDriveChip(){
+  const chip = document.getElementById('driveStatus');
+  const configured = true;
+  chip.style.cursor = 'pointer';
+  chip.title = configured ? 'Click to sync with Google Sheets' : 'Google Sheets not configured';
+}
+
+async function syncToServer(projects){
+  if(!CONFIG.SCRIPT_URL || CONFIG.false) return;
+  setDriveStatus('ok','Sheets: saving…');
+  for(const proj of projects){
+    const res = await apiCall('saveProject', { project: proj });
+    if(res && res.ok) setDriveStatus('ok','Sheets: saved ✓');
+    else setDriveStatus('err','Sheets: save failed');
+  }
+}
+
+async function syncFromServer(){
+  if(!CONFIG.SCRIPT_URL || CONFIG.false){
+    showToast('Google Sheets not configured yet — add SCRIPT_URL to app.html','err');
+    return;
+  }
+  setDriveStatus('ok','Sheets: loading…');
+  const res = await apiCall('getProjects');
+  if(!res || !res.ok){ setDriveStatus('err','Sheets: load failed'); return; }
+
+  // For each project, load its reports from the project sheet
+  const projects = res.projects || [];
+  for(const proj of projects){
+    const rRes = await apiCall('getReports', { projectId: proj.id });
+    if(rRes && rRes.ok) proj.reports = rRes.reports || [];
+  }
+
+  localStorage.setItem('dpr_projects', JSON.stringify(projects));
+  renderDashboard();
+  setDriveStatus('ok','Sheets: synced ✓');
+  showToast(`✓ Loaded ${projects.length} project(s) from Google Sheets`,'ok');
+}
+// ── STORAGE — localStorage with Drive sync ──────────────────────
+function loadProjects(){
+  try{ return JSON.parse(localStorage.getItem('dpr_projects')||'[]'); }
+  catch(e){ return []; }
+}
+function saveProjects(arr){
+  localStorage.setItem('dpr_projects', JSON.stringify(arr));
+  // async sync to Drive if token available
+  if(driveToken) syncToDrive(arr).catch(()=>{});
+}
+function getProject(id){ return loadProjects().find(p=>p.id===id)||null; }
+function updateProject(proj){
+  const all = loadProjects();
+  const idx = all.findIndex(p=>p.id===proj.id);
+  if(idx>=0) all[idx]=proj; else all.push(proj);
+  saveProjects(all);
+}
+function genId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+// ── GOOGLE DRIVE SYNC ───────────────────────────────────────────
+function setDriveStatus(state, msg){
+  const dot = document.getElementById('driveDot');
+  const txt = document.getElementById('driveStatusText');
+  dot.className = 'drive-dot ' + (state==='ok'?'ok':state==='err'?'err':'');
+  txt.textContent = msg || 'Google Sheets';
+  if(typeof updateDriveChip === 'function') updateDriveChip();
+}
+
+// Launch Google OAuth popup — implicit flow (no server needed)
+
+
+
+function renderDashboard(){
+  const projects = loadProjects();
+
+  // Stats
+  const totalDPRs = projects.reduce((s,p)=>s+(p.reports||[]).length,0);
+  const totalDelays = projects.reduce((s,p)=>{
+    return s+(p.reports||[]).reduce((r,d)=>r+(d.delayEvents||[]).filter(e=>e.title||e.desc).length,0);
+  },0);
+  const totalIssues = projects.reduce((s,p)=>{
+    return s+(p.reports||[]).reduce((r,d)=>r+(d.issues||[]).length,0);
+  },0);
+
+  document.getElementById('statProjects').textContent = projects.length;
+  document.getElementById('statDPRs').textContent = totalDPRs;
+  document.getElementById('statDelays').textContent = totalDelays;
+  document.getElementById('statIssues').textContent = totalIssues;
+
+  // Sidebar projects
+  const sideList = document.getElementById('sidebarProjects');
+  if(projects.length){
+    sideList.innerHTML = projects.map(p=>`
+      <div class="proj-item" onclick="openProject('${p.id}')">
+        <div class="proj-dot"></div>
+        <div class="proj-name">${p.name||'Unnamed Project'}</div>
+        <div class="proj-role ${p.role||'sc'}">${p.role==='mc'?'MC':'SC'}</div>
+      </div>
+    `).join('');
+  } else {
+    sideList.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:.7rem;color:var(--sidemuted);padding:6px 12px">No projects yet</div>';
+  }
+
+  // Project grid
+  const grid = document.getElementById('projectsGrid');
+  const cards = projects.map(p=>{
+    const dprs = (p.reports||[]).length;
+    const last = (p.reports||[]).sort((a,b)=>(b.reportDate||'').localeCompare(a.reportDate||''))[0];
+    const progress = last?.progress||0;
+    const delays = (p.reports||[]).reduce((s,d)=>s+(d.delayEvents||[]).filter(e=>e.title||e.desc).length,0);
+    return `
+      <div class="project-card" onclick="openProject('${p.id}')">
+        <div class="pc-actions">
+          <div class="pc-action-btn" onclick="event.stopPropagation();editProject('${p.id}')" title="Settings">⚙️</div>
+          <div class="pc-action-btn danger" onclick="event.stopPropagation();confirmDelete('${p.id}')" title="Delete">🗑</div>
+        </div>
+        <div class="pc-top">
+          <div class="pc-name">${p.name||'Unnamed Project'}</div>
+          <div class="pc-badge ${p.role||'sc'}">${p.role==='mc'?'MAIN CONTRACTOR':'SUB-CONTRACTOR'}</div>
+        </div>
+        <div class="pc-meta">${p.contractNo||'No contract no.'} · ${p.mc||'—'}</div>
+        <div class="pc-stats">
+          <div class="pc-stat">
+            <div class="pc-stat-val">${dprs}</div>
+            <div class="pc-stat-key">DPRs</div>
+          </div>
+          <div class="pc-stat">
+            <div class="pc-stat-val">${progress}%</div>
+            <div class="pc-stat-key">Progress</div>
+          </div>
+          <div class="pc-stat">
+            <div class="pc-stat-val">${delays}</div>
+            <div class="pc-stat-key">Delays</div>
+          </div>
+        </div>
+        <div class="pc-progress">
+          <div class="pc-progress-fill" style="width:${progress}%"></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  grid.innerHTML = cards + `
+    <div class="project-card new-card" onclick="openNewProjectModal()">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span style="font-size:.9rem;font-weight:600">New Project</span>
+    </div>`;
+}
+
+// ── PROJECT ACTIONS ──────────────────────────────────────────────
+function handleDriveBtn(){
+  const chip = document.getElementById('driveStatus');
+  if(driveToken && driveTokenExpiry > Date.now()){
+    // Already connected — clicking syncs
+    syncFromDrive();
+  } else {
+    // Not connected — clicking starts OAuth
+    connectDrive();
+  }
+}
+
+function updateDriveChip(){
+  const chip = document.getElementById('driveStatus');
+  if(driveToken && driveTokenExpiry > Date.now()){
+    // Connected — chip is subtle, no pointer needed
+    chip.style.cursor = 'default';
+    chip.title = 'Google Sheets connected — click to sync';
+  } else {
+    // Not connected — make it obvious it's clickable
+    chip.style.cursor = 'pointer';
+    chip.title = 'Click to connect Google Drive';
+  }
+}
+
+function openProject(id){
+  localStorage.setItem('dpr_currentProject', id);
+  window.location.href = CONFIG.DPR_URL + '?project=' + id;
+}
+
+function editProject(id){
+  localStorage.setItem('dpr_currentProject', id);
+  window.location.href = CONFIG.DPR_URL + '?project=' + id + '&view=setup';
+}
+
+async function confirmDelete(id){
+  const proj = getProject(id);
+  if(!proj) return;
+
+  const dprCount = (proj.reports||[]).length;
+  const driveNote = driveToken ? '\n\nThis will also be permanently deleted from Google Drive.' : '';
+  if(!confirm(`Delete "${proj.name}"?\n\nThis will permanently delete all ${dprCount} DPR${dprCount!==1?'s':''}, all attached drawings and documents for this project.${driveNote}\n\nThis cannot be undone.`)) return;
+
+  // Remove from localStorage immediately
+  const all = loadProjects().filter(p=>p.id!==id);
+  localStorage.setItem('dpr_projects', JSON.stringify(all));
+  renderDashboard();
+  showToast('Deleting project…','ok');
+
+  // Sync deletion to Drive and confirm
+  // Delete from Google Sheets server
+  const configured = true;
+  if(configured){
+    setDriveStatus('ok','Sheets: deleting…');
+    try{
+      await apiCall('deleteProject', { projectId: id });
+      showToast(`✓ "${proj.name}" deleted — removed from Google Sheets`,'ok');
+      setDriveStatus('ok','Sheets: synced ✓');
+    }catch(e){
+      showToast(`Deleted locally — Sheets sync failed`,'err');
+    }
+  } else {
+    showToast(`✓ "${proj.name}" deleted`,'ok');
+  }
+}
+
+function openNewProjectModal(){
+  createProject();
+}
+function closeNewProjectModal(){ /* no-op */ }
+
+function createProject(){
+  // Just generate an ID and send to full setup page — project saved only after user fills details
+  const id = genId();
+  closeNewProjectModal();
+  localStorage.setItem('dpr_currentProject', id);
+  window.location.href = './qspro_dpr_manager.html?project=' + id + '&view=setup&from=app&new=1';
+}
+
+// ── VIEWS ────────────────────────────────────────────────────────
+function showView(v){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('topbarTitle').textContent =
+    v==='dashboard'?'Projects Dashboard':'Recent Activity';
+  if(v==='dashboard') renderDashboard();
+}
+
+// ── TOAST ────────────────────────────────────────────────────────
+function showToast(msg, type='ok'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>t.classList.remove('show'), 4000);
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────
+(function boot(){
+  const loader = document.getElementById('pageLoader');
+
+  if(!checkSession()){
+    return; // redirects to login
+  }
+
+  // Set user info
+  document.getElementById('loaderMsg').textContent = 'Loading projects…';
+  const email = currentUser?.email || '';
+  document.getElementById('userName').textContent = email.split('@')[0];
+  document.getElementById('userAvatar').textContent = (email[0]||'U').toUpperCase();
+
+  renderDashboard();
+  // Check if Apps Script is configured
+  const configured = true;
+  setDriveStatus('ok', 'Sheets: connected');
+  updateDriveChip();
+  // Auto-sync on load if configured
+  if(configured) syncFromServer().catch(()=>{});
+
+  // Fade out loader
+  setTimeout(()=>{
+    loader.classList.add('fade');
+    setTimeout(()=>loader.style.display='none', 400);
+  }, 800);
+})();
+
+// Enter key on new project modal
+document.getElementById('newProjName').addEventListener('keydown', e=>{
+  if(e.key==='Enter') createProject();
+});
+</script>
+</body>
+</html>
