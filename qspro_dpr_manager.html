@@ -24456,8 +24456,11 @@ function getDPRData(){
     weather,activities,manpower,staff,labour,plant,materials,delayEvents,
     drawingsMeta:dprDrawings.map(d=>({
       name:d.name, size:d.size, type:d.type, desc:d.desc,
-      fileId:d.fileId||null, driveUrl:d.driveUrl||null, viewUrl:d.viewUrl||null,
-      dataUrl:d.dataUrl||null  // always keep dataUrl for PDF re-download from archive
+      fileId:d.fileId||null, driveUrl:d.driveUrl||null, viewUrl:d.viewUrl||null
+      // dataUrl NEVER sent to server — drawings already live in Drive (fileId).
+      // Embedding base64 in saveReport's POST body caused CORS/fetch failures
+      // on Apps Script for reports with attachments (oversized request body).
+      // On re-download, the file is fetched back from Drive using fileId.
     })),
     issues,
     remToday:document.getElementById('dprRemToday').value,
@@ -25250,11 +25253,22 @@ async function renderPDF(dprData){
   // ════════════════════════════════════════════════════════════════
   //  APPEND DRAWINGS AS EXTRA PAGES (PDF merge / image pages)
   // ════════════════════════════════════════════════════════════════
-  const allDrawings = dprDrawings.length > 0
-    ? dprDrawings
-    : (dprData.drawingsMeta||[]).filter(x=>x.dataUrl).map(x=>({
-        name:x.name, size:x.size, type:x.type, dataUrl:x.dataUrl
-      }));
+  // dprDrawings (current session, has dataUrl in memory) takes priority.
+  // On re-download from archive, dataUrl is never stored server-side —
+  // fetch each drawing's bytes back from Drive using its fileId instead.
+  let allDrawings = dprDrawings.length > 0 ? dprDrawings : [];
+  if(allDrawings.length === 0 && (dprData.drawingsMeta||[]).length > 0){
+    for(const meta of dprData.drawingsMeta){
+      if(meta.fileId){
+        try{
+          const res = await apiCall('getFileData', { fileId: meta.fileId });
+          if(res && res.ok && res.dataUrl){
+            allDrawings.push({ name: meta.name||res.name, size: meta.size, type: meta.type||res.mimeType, dataUrl: res.dataUrl });
+          }
+        }catch(e){ console.warn('Could not fetch drawing from Drive:', meta.name, e); }
+      }
+    }
+  }
 
   const pdfDraws = allDrawings.filter(dr=>dr.type==='application/pdf');
   const imgDraws = allDrawings.filter(dr=>dr.type&&dr.type.startsWith('image/'));
@@ -25348,12 +25362,9 @@ async function redownloadPDF(dprId){
   dpr.role=proj.role||dpr.role||'sc';
   dpr.submitTo=proj.submitTo||dpr.submitTo||'';
   showToast('Generating PDF…','ok');
-  // Restore dprDrawings from saved drawingsMeta (dataUrl kept in report)
-  dprDrawings = (dpr.drawingsMeta||[]).filter(d=>d.dataUrl).map(d=>({
-    name:d.name, size:d.size, type:d.type, desc:d.desc,
-    fileId:d.fileId||null, driveUrl:d.driveUrl||null,
-    dataUrl:d.dataUrl
-  }));
+  // dprDrawings cleared — renderPDF will fetch each drawing's bytes from
+  // Drive via fileId (dataUrl is never stored server-side, see saveReport).
+  dprDrawings = [];
   try{
     if(window._pdfLibsLoaded < 4){
       let waited=0;
